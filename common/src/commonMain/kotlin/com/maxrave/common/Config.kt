@@ -10,7 +10,7 @@ import kotlinx.datetime.Month
 
 object Config {
     /** Anything else is our APK renamed and re-signed by someone. */
-    val OFFICIAL_PACKAGE_NAMES = setOf("com.maxrave.simpmusic", "com.maxrave.simpmusic.dev")
+    val OFFICIAL_PACKAGE_NAMES = setOf("app.musikku", "app.musikku.dev")
 
     const val SPOTIFY_LOG_IN_URL: String = "https://accounts.spotify.com/en/login"
     const val SPOTIFY_ACCOUNT_URL = "https://accounts.spotify.com/en/status"
