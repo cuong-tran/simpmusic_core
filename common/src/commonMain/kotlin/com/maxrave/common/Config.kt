@@ -15,8 +15,8 @@ object Config {
      */
     val OFFICIAL_PACKAGE_NAMES =
         setOf(
-            "com.maxrave.simpmusic",
-            "com.maxrave.simpmusic.dev",
+            "app.musikku",
+            "app.musikku.dev",
             "com.spotify.music",
         )
 
