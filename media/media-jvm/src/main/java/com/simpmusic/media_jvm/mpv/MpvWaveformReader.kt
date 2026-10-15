@@ -1,5 +1,6 @@
 package com.simpmusic.media_jvm.mpv
 
+import com.maxrave.common.desktopDataPath
 import com.maxrave.domain.mediaservice.automix.TrackStructure
 import com.maxrave.domain.mediaservice.automix.TrackStructureAnalyzer
 import com.maxrave.domain.mediaservice.player.BassEnvelope
@@ -20,7 +21,7 @@ import kotlin.math.roundToInt
 
 /**
  * Builds the SoundCloud style's waveform on Desktop, matching Android's WaveformReader: one level per
- * 1 / [WAVEFORM_BARS_PER_SECOND] s, each 0..1 against the loudest bar, kept under ~/.simpmusic/waveforms.
+ * 1 / [WAVEFORM_BARS_PER_SECOND] s, each 0..1 against the loudest bar, kept under ~/.musikku/waveforms.
  *
  * mpv shares no cache between handles, so the track's audio is played once more through a second,
  * silent handle. A lavfi chain resamples it to 8 kHz mono 16-bit, cuts it into one frame per bar,
@@ -54,7 +55,7 @@ internal object MpvWaveformReader {
     private val UNSAFE_FILE_CHARS = Regex("[^A-Za-z0-9_-]")
 
     private val dir: File by lazy {
-        File(System.getProperty("user.home"), ".simpmusic" + File.separator + "waveforms").apply { mkdirs() }
+        File(desktopDataPath("waveforms")).apply { mkdirs() }
     }
 
     /**

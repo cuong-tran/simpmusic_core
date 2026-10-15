@@ -3,6 +3,7 @@ package com.maxrave.data.db
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.maxrave.common.DB_NAME
+import com.maxrave.common.DESKTOP_DATA_DIR
 import com.maxrave.data.io.getHomeFolderPath
 import java.io.File
 
@@ -15,6 +16,6 @@ actual fun getDatabaseBuilder(
 }
 
 actual fun getDatabasePath(): String {
-    val dbFile = File(getHomeFolderPath(listOf(".simpmusic", "db")), DB_NAME)
+    val dbFile = File(getHomeFolderPath(listOf(DESKTOP_DATA_DIR, "db")), DB_NAME)
     return dbFile.absolutePath
 }

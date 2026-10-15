@@ -18,8 +18,12 @@ import kotlin.io.encoding.Base64
  * answers with the nonce and the computer's id, is the paired computer, whatever its address today.
  */
 object PairedSyncWire {
-    /** Fixed, so when the computer's address changes the phone only has to find an IP. */
-    const val PORT = 48517
+    /**
+     * Fixed, so when the computer's address changes the phone only has to find an IP. Musikku's own
+     * (SimpMusic's is 48517), so the two desktop apps can serve their phones at the same time. A phone
+     * takes the port from the pairing QR and the computer's replies, so it needs no copy of this.
+     */
+    const val PORT = 48518
 
     /** Administratively scoped multicast group the computer listens on for the phone's probe. */
     const val GROUP = "239.255.48.17"
