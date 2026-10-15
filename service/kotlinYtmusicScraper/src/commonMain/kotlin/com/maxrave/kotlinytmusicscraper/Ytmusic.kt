@@ -1216,8 +1216,11 @@ class Ytmusic {
                 jobs.forEach { it.join() }
             }
 
-            // Merge all chunks into final file
+            // Merge all chunks into final file. Delete the old name first, as singleThreadedDownload
+            // does: on Desktop it may be a hard link to SimpMusic's copy (LegacyDesktopDataImport),
+            // and writing through it would rewrite both apps' file.
             Logger.d(TAG, "Merging chunks into $path")
+            if (fileSystem.exists(path)) fileSystem.delete(path)
             fileSystem.sink(path).buffer().use { finalSink ->
                 tempFiles.forEach { tempFile ->
                     if (fileSystem.exists(tempFile)) {
