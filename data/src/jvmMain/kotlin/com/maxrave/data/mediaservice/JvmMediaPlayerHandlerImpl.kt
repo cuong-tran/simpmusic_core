@@ -10,6 +10,7 @@ import com.maxrave.common.Config.SHARE
 import com.maxrave.common.Config.SONG_CLICK
 import com.maxrave.common.Config.VIDEO_CLICK
 import com.maxrave.common.DESC
+import com.maxrave.common.DESKTOP_APP_ID
 import com.maxrave.common.LOCAL_PLAYLIST_ID
 import com.maxrave.common.LOCAL_PLAYLIST_ID_SAVED_QUEUE
 import com.maxrave.common.MERGING_DATA_TYPE
@@ -216,8 +217,8 @@ class JvmMediaPlayerHandlerImpl(
             Platform.MacOs
         } else {
             Platform.Linux(
-                "SimpMusic",
-                "com.maxrave.simpmusic",
+                "Musikku",
+                DESKTOP_APP_ID,
             )
         }
     }

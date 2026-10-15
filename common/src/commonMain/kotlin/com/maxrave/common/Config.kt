@@ -651,6 +651,16 @@ const val DOWNLOAD_EXOPLAYER_FOLDER = "download"
 
 const val DB_NAME = "Music Database"
 
+/**
+ * Desktop app id: the macOS bundle id, the single-instance lock and the id sent in the user
+ * agent. Distinct from upstream SimpMusic's `com.maxrave.simpmusic`, so both can be installed
+ * and run side by side.
+ */
+const val DESKTOP_APP_ID = "app.musikku"
+
+/** Desktop data folder, under the user's home: settings, database, downloads, caches. */
+const val DESKTOP_DATA_DIR = ".musikku"
+
 const val EXOPLAYER_DB_NAME = "exoplayer_internal.db"
 
 const val FIRST_TIME_MIGRATION = "first_time_migration"
