@@ -35,6 +35,12 @@ import com.maxrave.domain.data.entities.analytics.EventArtistEntity
 import com.maxrave.domain.data.entities.analytics.PlaybackEventEntity
 import com.maxrave.domain.data.entities.sync.SyncChangeEntity
 
+/**
+ * Room schema version. A constant so code outside Room can compare against it — the desktop
+ * import of SimpMusic's library refuses a database newer than this, which Room cannot downgrade.
+ */
+const val MUSIC_DATABASE_VERSION = 29
+
 @Database(
     entities = [
         NewFormatEntity::class, SongInfoEntity::class, SearchHistory::class, SongEntity::class, ArtistEntity::class,
@@ -45,7 +51,7 @@ import com.maxrave.domain.data.entities.sync.SyncChangeEntity
         AutoEqEntryEntity::class, AutoEqIndexMetaEntity::class, AutoEqCurveEntity::class,
         ArtistMotionEntity::class, SyncChangeEntity::class, DeletedLyricsEntity::class,
     ],
-    version = 29,
+    version = MUSIC_DATABASE_VERSION,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 2, to = 3), AutoMigration(
