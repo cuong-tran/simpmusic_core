@@ -661,6 +661,9 @@ const val DESKTOP_APP_ID = "app.musikku"
 /** Desktop data folder, under the user's home: settings, database, downloads, caches. */
 const val DESKTOP_DATA_DIR = ".musikku"
 
+/** Upstream SimpMusic's desktop data folder, imported once into [DESKTOP_DATA_DIR]. */
+const val LEGACY_DESKTOP_DATA_DIR = ".simpmusic"
+
 const val EXOPLAYER_DB_NAME = "exoplayer_internal.db"
 
 const val FIRST_TIME_MIGRATION = "first_time_migration"
