@@ -9,6 +9,7 @@ import androidx.datastore.core.WriteScope
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferencesFileSerializer
+import com.maxrave.common.DESKTOP_DATA_DIR
 import com.maxrave.common.SETTINGS_FILENAME
 import com.maxrave.data.io.getHomeFolderPath
 import kotlinx.coroutines.sync.Mutex
@@ -20,7 +21,7 @@ actual fun createDataStoreInstance(): DataStore<Preferences> =
         storage =
             ReadsWaitForWritesStorage(
                 FileStorage(PreferencesFileSerializer) {
-                    File(getHomeFolderPath(listOf(".simpmusic")), "$SETTINGS_FILENAME.preferences_pb").absoluteFile
+                    File(getHomeFolderPath(listOf(DESKTOP_DATA_DIR)), "$SETTINGS_FILENAME.preferences_pb").absoluteFile
                 },
             ),
     )

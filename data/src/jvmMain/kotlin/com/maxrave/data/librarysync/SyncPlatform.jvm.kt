@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferencesFileSerializer
 import androidx.datastore.preferences.core.emptyPreferences
+import com.maxrave.common.DESKTOP_DATA_DIR
 import com.maxrave.data.dataStore.ReadsWaitForWritesStorage
 import com.maxrave.data.db.MusicDatabase
 import com.maxrave.data.io.getHomeFolderPath
@@ -20,14 +21,14 @@ actual fun createLibrarySyncDataStore(): DataStore<Preferences> =
         storage =
             ReadsWaitForWritesStorage(
                 FileStorage(PreferencesFileSerializer) {
-                    File(getHomeFolderPath(listOf(".simpmusic")), "library_sync.preferences_pb").absoluteFile
+                    File(getHomeFolderPath(listOf(DESKTOP_DATA_DIR)), "library_sync.preferences_pb").absoluteFile
                 },
             ),
         // A file that cannot be read starts over unpaired instead of failing every synced write.
         corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
     )
 
-actual fun syncBackupDirectory(): String = getHomeFolderPath(listOf(".simpmusic", "sync-backups"))
+actual fun syncBackupDirectory(): String = getHomeFolderPath(listOf(DESKTOP_DATA_DIR, "sync-backups"))
 
 private const val BACKUP_TAG = "LibrarySync"
 private const val BACKUPS_KEPT = 3

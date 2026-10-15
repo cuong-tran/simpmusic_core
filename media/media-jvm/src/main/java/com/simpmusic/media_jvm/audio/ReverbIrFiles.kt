@@ -1,5 +1,6 @@
 package com.simpmusic.media_jvm.audio
 
+import com.maxrave.common.desktopDataPath
 import com.maxrave.domain.data.player.ReverbImpulseResponse
 import com.maxrave.domain.data.player.ReverbPreset
 import com.maxrave.logger.Logger
@@ -135,8 +136,7 @@ private fun moveIntoPlace(
     }
 }
 
-private fun reverbFolderPath(): String =
-    System.getProperty("user.home") + File.separator + ".simpmusic" + File.separator + "reverb"
+private fun reverbFolderPath(): String = desktopDataPath("reverb")
 
 /**
  * The exact length [floatWav] produces for [preset], and so the only length a healthy cache file

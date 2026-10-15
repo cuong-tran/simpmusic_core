@@ -48,7 +48,7 @@ class PairedSyncTest {
 
     /**
      * Over a real socket on the fixed port: pair, find the computer, sync, then get removed. Fails with
-     * a BindException while a SimpMusic Desktop with a paired phone is running on the same machine.
+     * a BindException while a Musikku Desktop with a paired phone is running on the same machine.
      */
     @Test
     fun phoneAndComputerStayPaired() =
