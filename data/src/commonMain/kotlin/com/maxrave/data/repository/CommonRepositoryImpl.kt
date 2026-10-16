@@ -200,14 +200,11 @@ internal class CommonRepositoryImpl(
                             config.tidalClientSecret
                                 ?.takeIf { it.isNotBlank() }
                                 ?.let { dataStoreManager.setTidalClientSecret(it) }
-                            // Home decides the banner from whatever block is saved when its turn
-                            // comes: a fetch that lands first serves this launch, a slower one the
-                            // next. No block means no campaign, so "[]" clears it; an unchanged block
-                            // costs nothing, DataStore skips equal writes.
-                            dataStoreManager.putString(
-                                Promo.cacheKey(isDevBuild),
-                                config.promos?.toString() ?: "[]",
-                            )
+                            // This config is upstream SimpMusic's file, so its `promos` are SimpMusic's
+                            // campaigns and are never shown in Musikku. "[]" rather than no write: it
+                            // also clears a block that came over with SimpMusic's settings on the
+                            // desktop import. DataStore skips the equal writes after that.
+                            dataStoreManager.putString(Promo.cacheKey(isDevBuild), "[]")
                         }.onFailure {
                             Logger.e("RemoteConfig", "TIDAL remote config fetch failed: ${it.message}")
                         }
