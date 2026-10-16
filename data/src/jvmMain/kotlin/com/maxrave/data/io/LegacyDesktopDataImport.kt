@@ -2,6 +2,7 @@ package com.maxrave.data.io
 
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferencesFileSerializer
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READONLY
@@ -15,6 +16,7 @@ import com.maxrave.common.SETTINGS_FILENAME
 import com.maxrave.data.dataStore.DataStoreManagerImpl
 import com.maxrave.data.db.MUSIC_DATABASE_VERSION
 import com.maxrave.domain.data.entities.DownloadState
+import com.maxrave.domain.data.model.promo.Promo
 import com.maxrave.logger.Logger
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -121,6 +123,7 @@ fun importLegacyDesktopData(): LegacyImportResult {
         val unlinked = copyTree(legacy.toPath(), staging.toPath(), skip = databaseFiles(legacyDb))
         val settings = File(staging, "$SETTINGS_FILENAME.preferences_pb")
         dropSimpMusicDiscordLogin(settings)
+        dropSimpMusicPromos(settings)
         if (legacyDb.isFile) {
             val stagedDb = File(staging, "db${File.separator}$DB_NAME")
             stagedDb.parentFile.mkdirs()
@@ -367,6 +370,18 @@ private fun dropSimpMusicDiscordLogin(settings: File) =
             DataStoreManagerImpl.DISCORD_TOKEN_EXPIRES_AT,
         ),
         what = "Discord login",
+    )
+
+/**
+ * SimpMusic's settings carry its saved launch banners, which Musikku never shows. Home reads the
+ * saved block as soon as it starts, before the remote-config fetch can clear it, so the import
+ * drops it. Not fatal: at worst SimpMusic's banners show until a config fetch clears them.
+ */
+private fun dropSimpMusicPromos(settings: File) =
+    removeSettings(
+        settings,
+        listOf(false, true).map { stringPreferencesKey(Promo.cacheKey(isDevBuild = it)) },
+        what = "launch banners",
     )
 
 /**
