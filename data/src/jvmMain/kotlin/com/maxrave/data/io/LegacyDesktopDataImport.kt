@@ -4,14 +4,19 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READONLY
 import androidx.sqlite.driver.bundled.SQLITE_OPEN_READWRITE
+import androidx.datastore.preferences.core.PreferencesFileSerializer
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.sqlite.execSQL
 import com.maxrave.common.DB_NAME
 import com.maxrave.common.DESKTOP_DATA_DIR
 import com.maxrave.common.LEGACY_DESKTOP_DATA_DIR
 import com.maxrave.common.MERGING_DATA_TYPE
+import com.maxrave.common.SETTINGS_FILENAME
 import com.maxrave.data.db.MUSIC_DATABASE_VERSION
 import com.maxrave.domain.data.entities.DownloadState
+import com.maxrave.domain.data.model.promo.Promo
 import com.maxrave.logger.Logger
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import java.nio.file.FileSystemLoopException
@@ -104,6 +109,7 @@ fun importLegacyDesktopData(): LegacyImportResult {
         deleteStaging(staging)
         val legacyDb = File(legacy, "db${File.separator}$DB_NAME")
         val unlinked = copyTree(legacy.toPath(), staging.toPath(), skip = databaseFiles(legacyDb))
+        dropSimpMusicPromos(File(staging, "$SETTINGS_FILENAME.preferences_pb"))
         if (legacyDb.isFile) {
             val stagedDb = File(staging, "db${File.separator}$DB_NAME")
             stagedDb.parentFile.mkdirs()
@@ -327,6 +333,24 @@ private fun markNotDownloaded(
         connection.execSQL("COMMIT")
     } finally {
         connection.close()
+    }
+}
+
+/**
+ * SimpMusic's settings carry its saved launch banners, which Musikku never shows. Home reads the
+ * saved block as soon as it starts, before the remote-config fetch can clear it, so the import
+ * drops it. Not fatal: at worst SimpMusic's banners show until a config fetch clears them.
+ */
+private fun dropSimpMusicPromos(settings: File) {
+    if (!settings.isFile) return
+    try {
+        val keys = listOf(false, true).map { stringPreferencesKey(Promo.cacheKey(isDevBuild = it)) }
+        val preferences = runBlocking { settings.inputStream().use { PreferencesFileSerializer.readFrom(it) } }
+        if (keys.none { it in preferences }) return
+        val cleaned = preferences.toMutablePreferences().apply { keys.forEach { remove(it) } }
+        runBlocking { settings.outputStream().use { PreferencesFileSerializer.writeTo(cleaned, it) } }
+    } catch (e: Exception) {
+        Logger.w(TAG, "Could not drop SimpMusic's launch banners: ${e.message}")
     }
 }
 
