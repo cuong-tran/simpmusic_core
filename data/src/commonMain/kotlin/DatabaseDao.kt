@@ -9,6 +9,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.maxrave.domain.data.entities.AlbumEntity
 import com.maxrave.domain.data.entities.ArtistEntity
+import com.maxrave.domain.data.entities.ArtistMotionEntity
 import com.maxrave.domain.data.entities.AutoEqCurveEntity
 import com.maxrave.domain.data.entities.AutoEqEntryEntity
 import com.maxrave.domain.data.entities.AutoEqIndexMetaEntity
@@ -385,6 +386,26 @@ interface DatabaseDao {
     @Query("SELECT * FROM song WHERE totalPlayTime > 1 ORDER BY totalPlayTime DESC LIMIT 50")
     fun getMostPlayedSongs(): Flow<List<SongEntity>>
 
+    // Your library cards: a count and the newest artwork per collection, as Flows so a like, a
+    // follow or a finished download shows on the card straight away.
+    @Query("SELECT COUNT(*) FROM song WHERE liked = 1")
+    fun countLikedSongs(): Flow<Int>
+
+    @Query("SELECT thumbnails FROM song WHERE liked = 1 AND thumbnails IS NOT NULL ORDER BY favoriteAt DESC LIMIT :limit")
+    fun getLikedSongThumbnails(limit: Int): Flow<List<String?>>
+
+    @Query("SELECT COUNT(*) FROM song WHERE downloadState = 3")
+    fun countDownloadedSongs(): Flow<Int>
+
+    @Query("SELECT thumbnails FROM song WHERE downloadState = 3 AND thumbnails IS NOT NULL ORDER BY downloadedAt DESC LIMIT :limit")
+    fun getDownloadedSongThumbnails(limit: Int): Flow<List<String?>>
+
+    @Query("SELECT COUNT(*) FROM artist WHERE followed = 1")
+    fun countFollowedArtists(): Flow<Int>
+
+    @Query("SELECT thumbnails FROM artist WHERE followed = 1 AND thumbnails IS NOT NULL ORDER BY followedAt DESC LIMIT :limit")
+    fun getFollowedArtistThumbnails(limit: Int): Flow<List<String?>>
+
     @Query("UPDATE song SET downloadState = :downloadState, downloadedAt = :downloadedAt WHERE videoId = :videoId")
     suspend fun updateDownloadState(
         downloadState: Int,
@@ -453,6 +474,17 @@ interface DatabaseDao {
         nameLogoUrl: String?,
         nameLogoColor: String?,
     )
+
+    /**
+     * A row here means the artist has been *asked about*, not that they have a video — all four
+     * urls are null for the roughly two artists in five that Apple Music carries no motion for.
+     * Without that, the two requests behind it would run again on every visit to their page.
+     */
+    @Query("SELECT * FROM artist_motion WHERE channelId = :channelId")
+    suspend fun getArtistMotion(channelId: String): ArtistMotionEntity?
+
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    suspend fun upsertArtistMotion(motion: ArtistMotionEntity)
 
     @Query("UPDATE artist SET followed = :followed, followedAt = :followedAt WHERE channelId = :channelId")
     suspend fun updateFollowed(
@@ -744,8 +776,25 @@ interface DatabaseDao {
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertSetVideoId(setVideoIdEntity: SetVideoIdEntity)
 
-    @Query("SELECT * FROM set_video_id WHERE videoId = :videoId")
-    suspend fun getSetVideoId(videoId: String): SetVideoIdEntity?
+    /**
+     * A setVideoId names one entry of one playlist, so the playlist is part of the key. Looked up by
+     * videoId alone, SQLite returned the row whose playlist id sorts first — an entry of whichever
+     * other playlist also holds the song. Pass every spelling the playlist id is stored under.
+     */
+    @Query(
+        "SELECT * FROM set_video_id WHERE videoId = :videoId AND youtubePlaylistId IN (:youtubePlaylistIds) " +
+            "AND setVideoId IS NOT NULL LIMIT 1",
+    )
+    suspend fun getSetVideoId(
+        videoId: String,
+        youtubePlaylistIds: List<String>,
+    ): SetVideoIdEntity?
+
+    @Query("DELETE FROM set_video_id WHERE videoId = :videoId AND youtubePlaylistId = :youtubePlaylistId")
+    suspend fun deleteSetVideoId(
+        videoId: String,
+        youtubePlaylistId: String,
+    )
 
     // PairSongLocalPlaylist
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
@@ -1163,9 +1212,23 @@ interface DatabaseDao {
      * decides it here is the follow, not the row: the artists that statement spares are unfollowed
      * too, so their notifications go with the rest.
      * `artist.channelId` is NOT NULL, so the subquery cannot smuggle a NULL into the NOT IN.
+     * Blog rows are spared: their `channelId` is "", so without the type filter every one of them
+     * matched, and the RSS worker — which dedups against them — pushed recent posts a second time.
      */
-    @Query("DELETE FROM notification WHERE channelId NOT IN (SELECT channelId FROM artist WHERE followed = 1)")
+    @Query("DELETE FROM notification WHERE type = 'artist' AND channelId NOT IN (SELECT channelId FROM artist WHERE followed = 1)")
     suspend fun deleteNotificationsOfUnfollowedArtists(): Int
+
+    /**
+     * Cached Apple Music motion for an artist whose row the sweep has just removed.
+     *
+     * Keyed on the artist row rather than on the follow, unlike the two statements above: a motion
+     * row costs a few hundred bytes and is only ever read by that artist's page, so an artist kept
+     * because a liked or downloaded song credits them keeps their animated header too. Run AFTER
+     * [deleteUnfollowedArtists], or it measures against rows that are about to disappear.
+     * `artist.channelId` is NOT NULL, so the subquery cannot smuggle a NULL into the NOT IN.
+     */
+    @Query("DELETE FROM artist_motion WHERE channelId NOT IN (SELECT channelId FROM artist)")
+    suspend fun deleteOrphanedArtistMotion(): Int
 
     /** The new-releases tracking row for an artist the user no longer follows. See [deleteNotificationsOfUnfollowedArtists]. */
     @Query("DELETE FROM followed_artist_single_and_album WHERE channelId NOT IN (SELECT channelId FROM artist WHERE followed = 1)")

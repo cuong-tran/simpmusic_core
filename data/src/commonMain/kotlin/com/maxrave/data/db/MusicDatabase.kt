@@ -9,6 +9,7 @@ import androidx.room.execSQL
 import androidx.room.useWriterConnection
 import com.maxrave.domain.data.entities.AlbumEntity
 import com.maxrave.domain.data.entities.ArtistEntity
+import com.maxrave.domain.data.entities.ArtistMotionEntity
 import com.maxrave.domain.data.entities.AutoEqCurveEntity
 import com.maxrave.domain.data.entities.AutoEqEntryEntity
 import com.maxrave.domain.data.entities.AutoEqIndexMetaEntity
@@ -36,7 +37,7 @@ import com.maxrave.domain.data.entities.analytics.PlaybackEventEntity
  * Room schema version. A constant so code outside Room can compare against it — the desktop
  * import of SimpMusic's library refuses a database newer than this, which Room cannot downgrade.
  */
-const val MUSIC_DATABASE_VERSION = 26
+const val MUSIC_DATABASE_VERSION = 27
 
 @Database(
     entities = [
@@ -45,7 +46,8 @@ const val MUSIC_DATABASE_VERSION = 26
         SetVideoIdEntity::class, PairSongLocalPlaylist::class, GoogleAccountEntity::class, FollowedArtistSingleAndAlbum::class,
         NotificationEntity::class, TranslatedLyricsEntity::class, PodcastsEntity::class, EpisodeEntity::class,
         YourYouTubePlaylistList::class, PlaybackEventEntity::class, EventArtistEntity::class,
-        AutoEqEntryEntity::class, AutoEqIndexMetaEntity::class, AutoEqCurveEntity::class
+        AutoEqEntryEntity::class, AutoEqIndexMetaEntity::class, AutoEqCurveEntity::class,
+        ArtistMotionEntity::class
     ],
     version = MUSIC_DATABASE_VERSION,
     exportSchema = true,
@@ -97,6 +99,11 @@ const val MUSIC_DATABASE_VERSION = 26
         AutoMigration(25, 26),
         AutoMigration(24, 26),
         AutoMigration(23, 26),
+        // 27 adds artist_motion. One new table and nothing else, so Room generates the migration
+        // itself — no spec, and no path by which an existing row can be touched.
+        AutoMigration(26, 27),
+        AutoMigration(25, 27),
+        AutoMigration(24, 27),
     ],
 )
 @TypeConverters(Converters::class)

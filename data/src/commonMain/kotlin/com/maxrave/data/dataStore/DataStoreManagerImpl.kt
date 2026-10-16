@@ -118,6 +118,23 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val tasteProfile: Flow<String?> =
+        settingsDataStore.data.map { preferences ->
+            preferences[TASTE_PROFILE]
+        }
+
+    override suspend fun setTasteProfile(json: String?) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                if (json == null) {
+                    settings.remove(TASTE_PROFILE)
+                } else {
+                    settings[TASTE_PROFILE] = json
+                }
+            }
+        }
+    }
+
     override val quality: Flow<String> =
         settingsDataStore.data.map { preferences ->
             preferences[QUALITY] ?: COMMON_QUALITY.items[0].toString()
@@ -171,8 +188,15 @@ internal class DataStoreManagerImpl(
         key: String,
         value: String,
     ) {
-        settingsDataStore.edit { settings ->
-            settings[stringPreferencesKey(key)] = value
+        // Off the caller's thread, like every other write here. DataStore runs an edit's transform in
+        // the caller's context, so a write asked for from the main thread needs the main thread to
+        // finish. When the player's runBlocking holds the main thread waiting on a later write, the two
+        // wait on each other for good: an ANR at launch on 2026-10-10, when the remote config's
+        // promos block was saved from the main-thread service scope as playback started.
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[stringPreferencesKey(key)] = value
+            }
         }
     }
 
@@ -348,7 +372,7 @@ internal class DataStoreManagerImpl(
         mediaId: String,
         position: Long,
     ) {
-        Logger.w("saveRecentSong", "$mediaId $position")
+        Logger.d("saveRecentSong", "$mediaId $position")
         withContext(Dispatchers.IO) {
             settingsDataStore.edit { settings ->
                 settings[RECENT_SONG_MEDIA_ID_KEY] = mediaId
@@ -570,6 +594,8 @@ internal class DataStoreManagerImpl(
                 settings[SPDC] = spdc
             }
         }
+        // Every Spotify sign-in and sign-out path writes through here; the value itself never goes out.
+        Logger.i("Auth", if (spdc.isEmpty()) "Spotify: sp_dc cleared" else "Spotify: sp_dc saved")
     }
 
     override val equalizerEnabled: Flow<String> =
@@ -1618,6 +1644,7 @@ internal class DataStoreManagerImpl(
                 settings[DISCORD_TOKEN] = token
             }
         }
+        Logger.i("Auth", if (token.isEmpty()) "Discord: token cleared" else "Discord: token saved")
     }
 
     override val richPresenceEnabled: Flow<String> =
@@ -1660,6 +1687,7 @@ internal class DataStoreManagerImpl(
                 settings[LASTFM_USERNAME] = if (sessionKey.isEmpty()) "" else username
             }
         }
+        Logger.i("Auth", if (sessionKey.isEmpty()) "Last.fm: session cleared" else "Last.fm: session saved")
     }
 
     override val lastfmScrobbleEnabled: Flow<String> =
@@ -1764,6 +1792,7 @@ internal class DataStoreManagerImpl(
         val LOCATION = stringPreferencesKey("location")
         val MOOD_AND_GENRES_CACHE = stringPreferencesKey("mood_and_genres_cache")
         val MOOD_ARTWORK_CACHE = stringPreferencesKey("mood_artwork_cache")
+        val TASTE_PROFILE = stringPreferencesKey("ai_taste_profile")
         val QUALITY = stringPreferencesKey("quality")
         val DOWNLOAD_QUALITY = stringPreferencesKey("download_quality")
         val VIDEO_DOWNLOAD_QUALITY = stringPreferencesKey("video_download_quality")
