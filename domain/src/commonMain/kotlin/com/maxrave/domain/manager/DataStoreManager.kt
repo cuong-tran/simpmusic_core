@@ -498,7 +498,7 @@ interface DataStoreManager {
 
     suspend fun setThemeColorSource(source: String)
 
-    /** Seed color for the custom theme as an 8-digit ARGB hex string (e.g. "FF8ECAE6"). */
+    /** Seed color for the custom theme as an 8-digit ARGB hex string (e.g. "FFD13433"). */
     val customThemeColor: Flow<String>
 
     suspend fun setCustomThemeColor(argbHex: String)
@@ -630,7 +630,7 @@ interface DataStoreManager {
         const val THEME_COLOR_WALLPAPER = "WALLPAPER"
         const val THEME_COLOR_CUSTOM = "CUSTOM"
 
-        const val DEFAULT_THEME_COLOR_HEX = "FF8ECAE6"
+        const val DEFAULT_THEME_COLOR_HEX = "FFD13433"
 
         const val NOW_PLAYING_STYLE_SPOTIFY = "SPOTIFY"
         const val NOW_PLAYING_STYLE_M3_EXPRESSIVE = "M3_EXPRESSIVE"
