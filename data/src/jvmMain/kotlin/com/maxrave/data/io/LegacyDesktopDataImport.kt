@@ -23,6 +23,9 @@ import kotlin.io.path.isDirectory
 private const val TAG = "LegacyDesktopDataImport"
 private const val DOWNLOADS_DIR = "downloads"
 
+/** SimpMusic's own log; left behind, or Musikku's App log screen and export would open on it. */
+private const val LOGS_DIR = "logs"
+
 /** How long a snapshot waits on a lock held by a running SimpMusic before giving up. */
 private const val BUSY_TIMEOUT_MS = 5_000
 
@@ -138,10 +141,11 @@ private fun copyTree(
     skip: Set<Path>,
 ) {
     val downloads = from.resolve(DOWNLOADS_DIR)
+    val logs = from.resolve(LOGS_DIR)
     // Files.walk does not follow links, so a linked folder arrives here as one entry: the link.
     Files.walk(from).use { paths ->
         paths.forEach { source ->
-            if (source in skip) return@forEach
+            if (source in skip || source.startsWith(logs)) return@forEach
             val dest = to.resolve(from.relativize(source))
             try {
                 when {
