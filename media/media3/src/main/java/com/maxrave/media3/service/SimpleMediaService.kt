@@ -3,6 +3,7 @@ package com.maxrave.media3.service
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.ActivityManager.RunningAppProcessInfo
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -76,6 +77,7 @@ internal class SimpleMediaService :
         super.onCreate()
         Logger.w("Service", "Simple Media Service Created")
 
+        renamePlaybackChannel()
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider(
                 this,
@@ -216,5 +218,19 @@ internal class SimpleMediaService :
         val appProcessInfo = RunningAppProcessInfo()
         ActivityManager.getMyMemoryState(appProcessInfo)
         return appProcessInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+    }
+
+    /**
+     * Media3 creates the playback channel only while it is missing, so a name changed after that
+     * (SimpMusic to Musikku) never reaches an existing install. Handing the system back the channel
+     * it already holds renames it and keeps every setting the user changed on it.
+     */
+    private fun renamePlaybackChannel() {
+        val manager = getSystemService(NotificationManager::class.java) ?: return
+        val channel = manager.getNotificationChannel(MEDIA_NOTIFICATION.NOTIFICATION_CHANNEL_ID) ?: return
+        val name = getString(R.string.notification_channel_name)
+        if (channel.name?.toString() == name) return
+        channel.name = name
+        manager.createNotificationChannel(channel)
     }
 }
