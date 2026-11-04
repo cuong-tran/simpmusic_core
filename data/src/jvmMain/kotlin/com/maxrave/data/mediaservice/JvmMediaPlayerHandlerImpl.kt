@@ -230,9 +230,9 @@ class JvmMediaPlayerHandlerImpl(
                 "Musikku",
                 // MPRIS DesktopEntry: GNOME takes the media widget's icon from "<this>.desktop",
                 // so it must name the file the AppImage's AppRun installs (desktopApp/build.gradle.kts).
-                // Musikku's AppRun keeps upstream's file name on purpose, so an upgrade replaces the
-                // entry an older build installed instead of adding a second one.
-                "com-maxrave-simpmusic-MainKt",
+                // Musikku installs app.musikku.desktop, after DESKTOP_APP_ID; upstream's
+                // com-maxrave-simpmusic-MainKt.desktop belongs to a SimpMusic installed beside it.
+                "app.musikku",
             )
         }
     }
