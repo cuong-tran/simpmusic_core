@@ -1268,20 +1268,21 @@ class Ytmusic {
             if (jobDone == 1) return@repeat
 
             if (attempt > 0) {
-                try {
-                    if (fileSystem.exists(path)) {
-                        fileSystem.delete(path)
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-                downloadedBytes = 0L
                 val delayMs = (500L * (1 shl (attempt - 1))).coerceAtMost(10000L)
                 Logger.d(TAG, "Retry attempt $attempt after ${delayMs}ms delay")
                 delay(delayMs)
             }
 
             try {
+                // Delete the old name before EVERY attempt, the first included, and never write
+                // through it: on Desktop it may be a hard link to SimpMusic's copy
+                // (LegacyDesktopDataImport), so opening a sink on it would rewrite both apps' file
+                // and leave SimpMusic's truncated if the transfer failed. A delete that fails fails
+                // this attempt, and the next one tries again after the backoff.
+                if (fileSystem.exists(path)) {
+                    fileSystem.delete(path)
+                }
+                downloadedBytes = 0L
                 val length =
                     head(url) {
                         header("User-Agent", DOWNLOAD_USER_AGENT)
