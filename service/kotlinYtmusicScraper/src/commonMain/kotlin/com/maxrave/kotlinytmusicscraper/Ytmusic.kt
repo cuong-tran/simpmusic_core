@@ -1267,6 +1267,11 @@ class Ytmusic {
         repeat(maxRetries + 1) { attempt ->
             if (jobDone == 1) return@repeat
 
+            // An attempt is judged on its own outcome. Without this, an error from an earlier attempt
+            // (a failed HEAD, say) outlives the retry that succeeds, and the finished download is
+            // reported as failed.
+            lastException = null
+
             if (attempt > 0) {
                 val delayMs = (500L * (1 shl (attempt - 1))).coerceAtMost(10000L)
                 Logger.d(TAG, "Retry attempt $attempt after ${delayMs}ms delay")
